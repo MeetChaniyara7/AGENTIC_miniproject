@@ -4,7 +4,7 @@
 
 The important source code is explained in Chapter 7; the complete project is in the repository below.
 
-**GitHub Repository:** [Insert repository link here]
+**GitHub Repository:** https://github.com/MeetChaniyara7/AGENTIC_miniproject
 
 **Deployed Link:** not deployed; the application runs locally with `streamlit run app.py`.
 
