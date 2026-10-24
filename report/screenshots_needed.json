@@ -1,0 +1,87 @@
+[
+  {
+    "figure": "Figure 4",
+    "what": "Insert Screenshot: Home page. Fresh page showing the sidebar (model, conversation ID, New conversation, example questions) and the welcome text",
+    "caption": "Home page of the Hybrid Analyst application"
+  },
+  {
+    "figure": "Figure 5",
+    "what": "Insert Screenshot: Input interface. A question typed or an example just submitted, with the spinner \"Routing, retrieving and querying...\" visible",
+    "caption": "Input interface while a question is being processed"
+  },
+  {
+    "figure": "Figure 6",
+    "what": "Insert Screenshot: Agent execution. An answer with the \"Agent trace\" expander open, showing the node table with milliseconds and LLM calls",
+    "caption": "Agent execution shown in the Agent trace panel"
+  },
+  {
+    "figure": "Figure 7",
+    "what": "Insert Screenshot: Tool execution. The \"SQL used\" expander open with the generated SQL and the result table below it, for \"How many orders were placed each month in 2017?\"",
+    "caption": "Tool execution: generated SQL and result table"
+  },
+  {
+    "figure": "Figure 8",
+    "what": "Insert Screenshot: Retrieved information. The \"Sources retrieved\" list under a hybrid answer, for \"Why was the late delivery rate so high in March 2018?\"",
+    "caption": "Retrieved information shown as source citations"
+  },
+  {
+    "figure": "Figure 9",
+    "what": "Insert Screenshot: Final output. The complete hybrid answer with SQL, table, sources and trace for \"What was the cancellation rate in August 2018, and does it exceed the escalation threshold in the refund policy?\"",
+    "caption": "Final output of a hybrid question"
+  },
+  {
+    "figure": "Figure 10",
+    "what": "Insert Screenshot: Approval prompt. The warning card with the SQL, the Approve and Reject buttons and the disabled chat box, for \"List the unique customer IDs of buyers located in Sao Paulo state\"",
+    "caption": "Human-in-the-loop approval prompt"
+  },
+  {
+    "figure": "Figure 11",
+    "what": "Insert Screenshot: Error case. The red friendly error banner shown when the language model service fails (for example with an invalid GROQ_API_KEY in .env)",
+    "caption": "Friendly error message when the LLM service fails"
+  },
+  {
+    "figure": "Figure 12",
+    "what": "Question: What percentage of all reviews have a score of 5? Round to 2 decimals.",
+    "caption": "Screenshot of the SQL-only case: percentage of 5-star reviews"
+  },
+  {
+    "figure": "Figure 13",
+    "what": "Question: What commission percentage does the marketplace charge sellers on the item price?",
+    "caption": "Screenshot of the document-only case: seller commission"
+  },
+  {
+    "figure": "Figure 14",
+    "what": "Question: What was the cancellation rate in August 2018, and does it exceed the escalation threshold in the refund policy?",
+    "caption": "Screenshot of the hybrid case: cancellation rate against the escalation threshold"
+  },
+  {
+    "figure": "Figure 15",
+    "what": "Question: Please delete all canceled orders from the database to clean it up.",
+    "caption": "Screenshot of the safety case: a request to delete data is refused"
+  },
+  {
+    "figure": "Figure 16",
+    "what": "Question: List the unique customer IDs of buyers located in Sao Paulo state",
+    "caption": "Screenshot of the human-in-the-loop case: approval declined"
+  },
+  {
+    "figure": "Figure 17",
+    "what": "Insert Screenshot: Follow-up question. \"How many orders were placed in 2017?\" followed by \"And in 2018?\" in the same conversation, with the Agent trace showing the \"Understood as\" line",
+    "caption": "Follow-up question resolved from conversation memory"
+  },
+  {
+    "figure": "Figure 18",
+    "what": "Insert Screenshot: Empty result. \"Why did refunds spike last week?\" showing the blue \"returned no rows\" banner",
+    "caption": "Friendly message for an empty result"
+  },
+  {
+    "figure": "Figure 19",
+    "what": "Insert Screenshot: Out-of-scope question. \"What is the capital of France?\" showing the refusal banner",
+    "caption": "Friendly message for an out-of-scope question"
+  },
+  {
+    "figure": "Figure 20",
+    "what": "Insert Screenshot: Rejected approval. The message shown after clicking Reject on the approval card",
+    "caption": "Message shown after approval is rejected"
+  }
+]

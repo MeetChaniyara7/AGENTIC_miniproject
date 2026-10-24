@@ -1,0 +1,69 @@
+{
+  "thread_id": "sql-01",
+  "question": "How many distinct customers (unique buyers) are there in each state? Show the top 5 states.",
+  "route": "SQL",
+  "answer": "**Top\u202f5 states by number of distinct customers**\n\n- **SP:**\u202f40,302 distinct customers  \n- **RJ:**\u202f12,384 distinct customers  \n- **MG:**\u202f11,259 distinct customers  \n- **RS:**\u202f5,277 distinct customers  \n- **PR:**\u202f4,882 distinct customers  \n\n*These figures come from the database query that counted\u202f`COUNT(DISTINCT c.customer_unique_id)`\u202fgrouped by\u202f`c.customer_state` and ordered descending, limited to the top\u202f5 states.*",
+  "totals": {
+    "nodes": 6,
+    "llm_calls": 3,
+    "duration_ms": 13405.0,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=SQL: The question requires only factual data from the database.",
+      "success": true,
+      "duration_ms": 1007.7,
+      "llm_calls": 1,
+      "input": "How many distinct customers (unique buyers) are there in each state? Show the top 5 states.",
+      "output": "{\"route\": \"SQL\", \"rewritten_question\": \"How many distinct customers (unique buyers) are there in each state? Show the top 5 states.\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Count distinct customer IDs per state, order by count descending, and return the top 5 states.\"}], \"reason\": \"The question requires only factual data from the database.\"}"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: customers, sellers, order_items",
+      "success": true,
+      "duration_ms": 10486.2,
+      "llm_calls": 0,
+      "input": "How many distinct customers (unique buyers) are there in each state? Show the top 5 states.",
+      "output": "RELEVANT TABLES:\nTable customers: One row per customer record. A customer_id exists per order; the real person is customer_unique_id.\n- customer_id: Key used to join orders to customers. Different for every order, even for the same person.\n- customer_unique_id: Identifier of the real person across orders. Count distinct values to count buyers. [SENSITIVE: aggregate only]\n- customer_zip_code_prefix: First 5 digits of the customer's postal code. Approximate home area. [SENSITIVE: aggregate only]\n- customer_city: Customer's city, lowercase Portuguese name.\n- customer_state: Two-letter Brazilian state code, e.g. SP, RJ, MG.\nTable sellers: One row per seller (a business that sells on the marketplace).\n- seller_id: Joins to order_items.seller_id.\n- seller_zip_code_prefix: First 5 digits of the seller's postal code.\n- seller_city: Seller's city.\n- seller_state: Two-letter state code.\nTable order_items: One row per product line in an order. An order with 3 items has 3 rows. Source of item revenue and freight.\n- order_id: Joins to orders.order_id.\n- order_item_id: Sequence number of the item within the order, starting at 1.\n- product_id: Joins to products.product_id.\n- seller_id: Joins to sellers.seller_id. The seller who fulfils this item.\n- shipping_limit_date: Deadline for the seller to hand the item to the carrier.\n- price: Item price in BRL, excluding freight.\n- freight_value: Freight charge in BRL for this item.\n\nSIMILAR EXAMPLE QUERIES:\nQ: Which 10 customer states have the highest late delivery rate (states with at least 30 delivered orders)?\nSQL: SELECT c.customer_state, COUNT(*) AS delivered_orders, ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL GROUP BY c.customer_state HAVING COUNT(*) >= 30 ORDER BY late_rate_pct DESC LIMIT 10\nQ: Which 10 sellers have... [2479 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: SELECT c.customer_state AS state, COUNT(DISTINCT c.customer_unique_id) AS distinct_customers\nFROM customers c\nGROUP BY c",
+      "success": true,
+      "duration_ms": 1057.9,
+      "llm_calls": 1,
+      "input": "How many distinct customers (unique buyers) are there in each state? Show the top 5 states.",
+      "output": "SELECT c.customer_state AS state, COUNT(DISTINCT c.customer_unique_id) AS distinct_customers\nFROM customers c\nGROUP BY c.customer_state\nORDER BY distinct_customers DESC\nLIMIT 5"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 7.7,
+      "llm_calls": 0,
+      "input": "SELECT c.customer_state AS state, COUNT(DISTINCT c.customer_unique_id) AS distinct_customers\nFROM customers c\nGROUP BY c.customer_state\nORDER BY distinct_customers DESC\nLIMIT 5",
+      "output": "SELECT c.customer_state AS state, COUNT(DISTINCT c.customer_unique_id) AS distinct_customers FROM customers AS c GROUP BY c.customer_state ORDER BY distinct_customers DESC LIMIT 5"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "5 rows, 2 columns in 141.0 ms",
+      "success": true,
+      "duration_ms": 145.6,
+      "llm_calls": 0,
+      "input": "SELECT c.customer_state AS state, COUNT(DISTINCT c.customer_unique_id) AS distinct_customers FROM customers AS c GROUP BY c.customer_state ORDER BY distinct_customers DESC LIMIT 5",
+      "output": "[[\"SP\", 40302], [\"RJ\", 12384], [\"MG\", 11259], [\"RS\", 5277], [\"PR\", 4882]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (418 chars)",
+      "success": true,
+      "duration_ms": 699.9,
+      "llm_calls": 1,
+      "input": "rows=5, chunks=0",
+      "output": "**Top\u202f5 states by number of distinct customers**\n\n- **SP:**\u202f40,302 distinct customers  \n- **RJ:**\u202f12,384 distinct customers  \n- **MG:**\u202f11,259 distinct customers  \n- **RS:**\u202f5,277 distinct customers  \n- **PR:**\u202f4,882 distinct customers  \n\n*These figures come from the database query that counted\u202f`COUNT(DISTINCT c.customer_unique_id)`\u202fgrouped by\u202f`c.customer_state` and ordered descending, limited to the top\u202f5 states.*"
+    }
+  ]
+}

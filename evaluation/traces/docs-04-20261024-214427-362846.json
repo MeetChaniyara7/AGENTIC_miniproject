@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-04",
+  "question": "When are seller payouts made relative to the delivery date?",
+  "route": "DOCS",
+  "answer": "**Seller payouts are issued 30\u202fdays after the delivery date (or after the 7\u2011day withdrawal period if that is later), and they are processed each Monday.**\u3010seller_guidelines.md\u3011\n\n- The 30\u2011day lag allows any refunds to be netted before payout.  \n- If the 7\u2011day withdrawal window ends after the 30\u2011day mark, payouts wait until that later date.  \n- All payouts are scheduled for Monday releases.",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 9791.5,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question seeks a policy definition about payout timing, not data from the database.",
+      "success": true,
+      "duration_ms": 2763.7,
+      "llm_calls": 1,
+      "input": "When are seller payouts made relative to the delivery date?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"When are seller payouts made relative to the delivery date?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Locate the seller payout schedule policy and determine how payouts are timed in relation to the delivery date.\"}], \"reason\": \"The question seeks a policy definition about payout timing, not data from the database.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md, refund_policy.md, seller_guidelines.md",
+      "success": true,
+      "duration_ms": 19.8,
+      "llm_calls": 0,
+      "input": "When are seller payouts made relative to the delivery date?",
+      "output": "[\"seller_guidelines.md (0.6353)\", \"delivery_sla.md (0.6077)\", \"delivery_sla.md (0.5884)\", \"refund_policy.md (0.5656)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (391 chars)",
+      "success": true,
+      "duration_ms": 7008.0,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**Seller payouts are issued 30\u202fdays after the delivery date (or after the 7\u2011day withdrawal period if that is later), and they are processed each Monday.**\u3010seller_guidelines.md\u3011\n\n- The 30\u2011day lag allows any refunds to be netted before payout.  \n- If the 7\u2011day withdrawal window ends after the 30\u2011day mark, payouts wait until that later date.  \n- All payouts are scheduled for Monday releases."
+    }
+  ]
+}

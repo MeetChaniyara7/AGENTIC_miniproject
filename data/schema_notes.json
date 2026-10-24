@@ -1,0 +1,117 @@
+{
+  "_comment": "Plain-English notes per table/column for the SQL Analyst's schema_lookup tool. Sensitive columns are flagged with \"sensitive\": true.",
+  "sensitive_columns": [
+    "customers.customer_unique_id",
+    "customers.customer_zip_code_prefix",
+    "geolocation.geolocation_lat",
+    "geolocation.geolocation_lng"
+  ],
+  "tables": {
+    "customers": {
+      "description": "One row per customer record. A customer_id exists per order; the real person is customer_unique_id.",
+      "primary_key": ["customer_id"],
+      "columns": {
+        "customer_id": {"meaning": "Key used to join orders to customers. Different for every order, even for the same person."},
+        "customer_unique_id": {"meaning": "Identifier of the real person across orders. Count distinct values to count buyers.", "sensitive": true},
+        "customer_zip_code_prefix": {"meaning": "First 5 digits of the customer's postal code. Approximate home area.", "sensitive": true},
+        "customer_city": {"meaning": "Customer's city, lowercase Portuguese name."},
+        "customer_state": {"meaning": "Two-letter Brazilian state code, e.g. SP, RJ, MG."}
+      }
+    },
+    "geolocation": {
+      "description": "Latitude/longitude samples for Brazilian zip code prefixes. Many rows per prefix (about one million rows), so aggregate before joining.",
+      "primary_key": [],
+      "columns": {
+        "geolocation_zip_code_prefix": {"meaning": "First 5 digits of a postal code. Joins to customer or seller zip prefixes."},
+        "geolocation_lat": {"meaning": "Latitude of the sample point.", "sensitive": true},
+        "geolocation_lng": {"meaning": "Longitude of the sample point.", "sensitive": true},
+        "geolocation_city": {"meaning": "City name for the sample point."},
+        "geolocation_state": {"meaning": "Two-letter state code."}
+      }
+    },
+    "orders": {
+      "description": "One row per order with its status and lifecycle timestamps. Central table of the database.",
+      "primary_key": ["order_id"],
+      "columns": {
+        "order_id": {"meaning": "Unique order identifier. Joins to order_items, order_payments and order_reviews."},
+        "customer_id": {"meaning": "Joins to customers.customer_id."},
+        "order_status": {"meaning": "One of created, approved, invoiced, processing, shipped, delivered, unavailable, canceled."},
+        "order_purchase_timestamp": {"meaning": "When the customer placed the order. Use this to assign orders to months."},
+        "order_approved_at": {"meaning": "When payment was approved. NULL if never approved."},
+        "order_delivered_carrier_date": {"meaning": "When the seller handed the parcel to the carrier. NULL if not shipped."},
+        "order_delivered_customer_date": {"meaning": "When the customer received the parcel. NULL if not delivered."},
+        "order_estimated_delivery_date": {"meaning": "Delivery date promised to the customer at checkout."}
+      }
+    },
+    "order_items": {
+      "description": "One row per product line in an order. An order with 3 items has 3 rows. Source of item revenue and freight.",
+      "primary_key": ["order_id", "order_item_id"],
+      "columns": {
+        "order_id": {"meaning": "Joins to orders.order_id."},
+        "order_item_id": {"meaning": "Sequence number of the item within the order, starting at 1."},
+        "product_id": {"meaning": "Joins to products.product_id."},
+        "seller_id": {"meaning": "Joins to sellers.seller_id. The seller who fulfils this item."},
+        "shipping_limit_date": {"meaning": "Deadline for the seller to hand the item to the carrier."},
+        "price": {"meaning": "Item price in BRL, excluding freight."},
+        "freight_value": {"meaning": "Freight charge in BRL for this item."}
+      }
+    },
+    "order_payments": {
+      "description": "One row per payment used on an order. An order can have several rows (split payments, vouchers).",
+      "primary_key": ["order_id", "payment_sequential"],
+      "columns": {
+        "order_id": {"meaning": "Joins to orders.order_id."},
+        "payment_sequential": {"meaning": "Sequence number of the payment within the order."},
+        "payment_type": {"meaning": "credit_card, boleto, voucher, debit_card or not_defined."},
+        "payment_installments": {"meaning": "Number of instalments chosen by the customer."},
+        "payment_value": {"meaning": "Amount paid in BRL for this payment row."}
+      }
+    },
+    "order_reviews": {
+      "description": "Customer satisfaction reviews. review_id is not unique in the source data, and an order can have more than one review.",
+      "primary_key": [],
+      "columns": {
+        "review_id": {"meaning": "Review identifier. Not guaranteed unique."},
+        "order_id": {"meaning": "Joins to orders.order_id."},
+        "review_score": {"meaning": "Integer rating 1 (very poor) to 5 (excellent). 1-2 negative, 4-5 positive."},
+        "review_comment_title": {"meaning": "Optional title in Portuguese. Often NULL."},
+        "review_comment_message": {"meaning": "Optional free-text comment in Portuguese. Often NULL; may contain personal details."},
+        "review_creation_date": {"meaning": "When the satisfaction survey was sent."},
+        "review_answer_timestamp": {"meaning": "When the customer answered the survey."}
+      }
+    },
+    "products": {
+      "description": "One row per product with its category and physical attributes.",
+      "primary_key": ["product_id"],
+      "columns": {
+        "product_id": {"meaning": "Joins to order_items.product_id."},
+        "product_category_name": {"meaning": "Category in Portuguese. Join product_category_translation for English. Can be NULL."},
+        "product_name_lenght": {"meaning": "Number of characters in the product name. Original column name keeps the typo 'lenght'."},
+        "product_description_lenght": {"meaning": "Number of characters in the description. Original typo 'lenght' kept."},
+        "product_photos_qty": {"meaning": "Number of product photos."},
+        "product_weight_g": {"meaning": "Weight in grams."},
+        "product_length_cm": {"meaning": "Package length in centimetres."},
+        "product_height_cm": {"meaning": "Package height in centimetres."},
+        "product_width_cm": {"meaning": "Package width in centimetres."}
+      }
+    },
+    "sellers": {
+      "description": "One row per seller (a business that sells on the marketplace).",
+      "primary_key": ["seller_id"],
+      "columns": {
+        "seller_id": {"meaning": "Joins to order_items.seller_id."},
+        "seller_zip_code_prefix": {"meaning": "First 5 digits of the seller's postal code."},
+        "seller_city": {"meaning": "Seller's city."},
+        "seller_state": {"meaning": "Two-letter state code."}
+      }
+    },
+    "product_category_translation": {
+      "description": "Lookup table from Portuguese category names to English.",
+      "primary_key": ["product_category_name"],
+      "columns": {
+        "product_category_name": {"meaning": "Category name in Portuguese. Joins to products.product_category_name."},
+        "product_category_name_english": {"meaning": "Category name in English, e.g. health_beauty, computers_accessories."}
+      }
+    }
+  }
+}

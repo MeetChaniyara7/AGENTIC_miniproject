@@ -1,0 +1,132 @@
+id,category,question,sql_match,exec_ok,latency_ms,llm_calls,error,sql
+sql-01,sql,How many distinct customers (unique buyers) are there in each state? Show the top 5 states.,False,True,790.9,1,,"SELECT
+    c.customer_state AS state,
+    COUNT(DISTINCT c.customer_id) AS distinct_customers
+FROM customers AS c
+GROUP BY c.customer_state
+ORDER BY distinct_customers DESC
+LIMIT 5;"
+sql-02,sql,What was the total item revenue (sum of price) of delivered orders placed in 2017?,True,True,4328.5,1,,"SELECT SUM(oi.price) AS total_item_revenue
+FROM orders AS o
+JOIN order_items AS oi
+  ON o.order_id = oi.order_id
+WHERE o.order_status = 'delivered'
+  AND o.order_purchase_timestamp >= '2017-01-01'
+  AND o.order_purchase_timestamp < '2018-01-01';"
+sql-03,sql,What is the average review score of orders placed by customers in the state of SP?,True,True,5693.6,1,,"SELECT AVG(r.review_score) AS avg_review_score
+FROM order_reviews AS r
+JOIN orders AS o        ON r.order_id = o.order_id
+JOIN customers AS c    ON o.customer_id = c.customer_id
+WHERE c.customer_state = 'SP';"
+sql-04,sql,What is the average number of instalments used for credit card payments?,True,True,2801.5,1,,"SELECT AVG(payment_installments) AS average_installments
+FROM order_payments
+WHERE payment_type = 'credit_card';"
+sql-05,sql,What percentage of all reviews have a score of 5? Round to 2 decimals.,True,True,9028.9,1,,"SELECT ROUND(
+         100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*),
+         2
+       ) AS five_star_percentage
+FROM order_reviews;"
+sql-06,sql,"Which product category (English name) has the most order items sold, and how many items is that?",True,True,2140.0,1,,"SELECT 
+    pct.product_category_name_english AS category,
+    COUNT(*) AS total_items
+FROM order_items oi
+JOIN products p
+    ON oi.product_id = p.product_id
+JOIN product_category_translation pct
+    ON p.product_category_name = pct.product_category_name
+GROUP BY pct.product_category_name_english
+ORDER BY total_items DESC
+LIMIT 1;"
+sql-07,sql,What is the average time in days from purchase to customer delivery for delivered orders? Round to 1 decimal.,True,True,3971.0,1,,"SELECT ROUND(AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)), 1) AS avg_days_to_delivery
+FROM orders
+WHERE order_status = 'delivered'
+  AND order_delivered_customer_date IS NOT NULL;"
+sql-08,sql,How many orders with status canceled were placed in 2018?,True,True,3739.3,1,,"SELECT COUNT(*) AS canceled_orders_2018
+FROM orders
+WHERE order_status = 'canceled'
+  AND strftime('%Y', order_purchase_timestamp) = '2018';"
+sql-09,sql,What is the average freight value per order item? Round to 2 decimals.,True,True,4563.9,1,,"SELECT ROUND(AVG(freight_value), 2) AS avg_freight_per_item
+FROM order_items;"
+sql-10,sql,"Which payment type is used most often, and how many payment rows use it?",True,True,4764.6,1,,"SELECT
+    payment_type,
+    COUNT(*) AS payment_count
+FROM order_payments
+GROUP BY payment_type
+ORDER BY payment_count DESC
+LIMIT 1;"
+hyb-01,hybrid,"What is the overall late delivery rate for delivered orders, and is it below the company target?",True,True,4345.4,1,,"WITH delivered AS (
+    SELECT 
+        CASE 
+            WHEN datetime(order_delivered_customer_date) > datetime(order_estimated_delivery_date) THEN 1 
+            ELSE 0 
+        END AS is_late
+    FROM orders
+    WHERE order_delivered_customer_date IS NOT NULL
+      AND order_estimated_delivery_date IS NOT NULL
+)
+SELECT 
+    ROUND(100.0 * SUM(is_late) / COUNT(*), 2) AS late_delivery_rate_percent,
+    CASE 
+        WHEN (SUM(is_late) * 1.0 / COUNT(*)) < 0.10 THEN 'Yes'   -- target = 10%
+        ELSE 'No'
+    END AS below_target
+FROM delivered;"
+hyb-02,hybrid,"What was the cancellation rate in August 2018, and does it exceed the escalation threshold in the refund policy?",False,True,8874.9,1,,"SELECT
+    SUM(CASE WHEN o.order_status = 'canceled' THEN 1 ELSE 0 END) * 1.0 / COUNT(*) AS cancellation_rate,
+    CASE
+        WHEN SUM(CASE WHEN o.order_status = 'canceled' THEN 1 ELSE 0 END) * 1.0 / COUNT(*) > 0.05
+        THEN 'Yes'
+        ELSE 'No'
+    END AS exceeds_escalation_threshold
+FROM orders AS o
+WHERE o.order_purchase_timestamp >= '2018-08-01'
+  AND o.order_purchase_timestamp <  '2018-09-01';"
+hyb-03,hybrid,"What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?",True,True,4929.8,1,,"SELECT
+    AVG(CASE 
+            WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date 
+                 THEN r.review_score 
+        END) AS avg_late_review_score,
+    AVG(r.review_score) AS avg_marketplace_target_score
+FROM orders AS o
+JOIN order_reviews AS r
+  ON o.order_id = r.order_id
+WHERE r.review_score IS NOT NULL;"
+hyb-04,hybrid,"Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?",False,True,5099.1,1,,"SELECT
+    c.customer_state AS state,
+    SUM(CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 1 ELSE 0 END) * 1.0 / COUNT(*) AS late_delivery_rate,
+    (1 - SUM(CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 1 ELSE 0 END) * 1.0 / COUNT(*)) AS sla_target
+FROM orders AS o
+JOIN customers AS c
+  ON o.customer_id = c.customer_id
+WHERE o.order_delivered_customer_date IS NOT NULL
+GROUP BY c.customer_state
+HAVING COUNT(*) >= 30
+ORDER BY late_delivery_rate DESC
+LIMIT 1;"
+hyb-05,hybrid,"What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?",True,True,5159.6,1,,"SELECT 
+    ROUND(
+        100.0 * SUM(CASE WHEN review_score IN (1, 2) THEN 1 ELSE 0 END) 
+        / COUNT(*)
+    , 2) AS negative_review_share_percent,
+    20.0 AS max_allowed_negative_review_share_percent
+FROM order_reviews;"
+hyb-06,hybrid,"What is the average delivery time in days from purchase to delivery, and what average delivery time does the SLA target?",False,True,10279.9,1,,"SELECT 
+    AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) AS avg_actual_delivery_days,
+    AVG(julianday(order_estimated_delivery_date) - julianday(order_purchase_timestamp)) AS avg_sla_delivery_days
+FROM orders
+WHERE 
+    order_status = 'delivered'
+    AND order_purchase_timestamp IS NOT NULL
+    AND order_delivered_customer_date IS NOT NULL
+    AND order_estimated_delivery_date IS NOT NULL;"
+hyb-07,hybrid,"How many orders have the status canceled, and how much of the price is refunded to the customer for a cancelled order according to policy?",True,True,935.3,1,,"SELECT 
+    COUNT(DISTINCT o.order_id) AS cancelled_orders,
+    COALESCE(SUM(oi.price), 0)   AS total_refunded_amount
+FROM orders AS o
+LEFT JOIN order_items AS oi
+       ON o.order_id = oi.order_id
+WHERE o.order_status = 'canceled';"
+hyb-08,hybrid,"What percentage of reviews are 1-star, and what is the policy target for the 1-star share?",True,True,9089.0,1,,"SELECT
+    ROUND(100.0 * SUM(CASE WHEN review_score = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS one_star_percentage,
+    5.0 AS policy_target_one_star_percentage
+FROM order_reviews;"

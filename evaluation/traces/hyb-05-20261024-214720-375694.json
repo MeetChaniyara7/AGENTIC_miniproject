@@ -1,0 +1,78 @@
+{
+  "thread_id": "hyb-05",
+  "question": "What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?",
+  "route": "BOTH",
+  "answer": "**Negative reviews make up 14.69\u202f% of all reviews.**  \nThe moderation policy does not specify any maximum allowed share of negative reviews.\n\n- The database query returned a negative\u2011review share of **14.69\u202f%** (computed as\u202f100\u202f\u00d7\u202fnegative reviews \u00f7 total reviews)\u3010query results\u3011.  \n- A \u201cnegative review\u201d is defined as a score of\u202f1\u202for\u202f2 in the policy document\u3010review_moderation.md (2. Meaning of the review score)\u3011.  \n- The moderation policy lists removal criteria (personal data, abusive language, off\u2011topic, non\u2011buyer) but contains no rule limiting the proportion of negative scores\u3010review_moderation.md (4. Which reviews are published)\u3011.  \n\n*Therefore, the current share is 14.69\u202f%, and there is no stated maximum share allowed by the policy.*",
+  "totals": {
+    "nodes": 7,
+    "llm_calls": 3,
+    "duration_ms": 28123.7,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=BOTH: The question requires both a data-derived metric and a policy-defined threshold.",
+      "success": true,
+      "duration_ms": 3214.4,
+      "llm_calls": 1,
+      "input": "What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?",
+      "output": "{\"route\": \"BOTH\", \"rewritten_question\": \"What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Calculate the proportion of reviews with score 1 or 2 relative to the total number of reviews in the dataset.\"}, {\"type\": \"DOCS\", \"task\": \"Retrieve the moderation policy's defined maximum allowed share (percentage) of negative reviews.\"}], \"reason\": \"The question requires both a data-derived metric and a policy-defined threshold.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from review_moderation.md",
+      "success": true,
+      "duration_ms": 20.6,
+      "llm_calls": 0,
+      "input": "What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?",
+      "output": "[\"review_moderation.md (0.6069)\", \"review_moderation.md (0.5854)\", \"review_moderation.md (0.5195)\", \"review_moderation.md (0.4972)\"]"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: order_reviews, orders, sellers",
+      "success": true,
+      "duration_ms": 55.8,
+      "llm_calls": 0,
+      "input": "What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?",
+      "output": "RELEVANT TABLES:\nTable order_reviews: Customer satisfaction reviews. review_id is not unique in the source data, and an order can have more than one review.\n- review_id: Review identifier. Not guaranteed unique.\n- order_id: Joins to orders.order_id.\n- review_score: Integer rating 1 (very poor) to 5 (excellent). 1-2 negative, 4-5 positive.\n- review_comment_title: Optional title in Portuguese. Often NULL.\n- review_comment_message: Optional free-text comment in Portuguese. Often NULL; may contain personal details.\n- review_creation_date: When the satisfaction survey was sent.\n- review_answer_timestamp: When the customer answered the survey.\nTable orders: One row per order with its status and lifecycle timestamps. Central table of the database.\n- order_id: Unique order identifier. Joins to order_items, order_payments and order_reviews.\n- customer_id: Joins to customers.customer_id.\n- order_status: One of created, approved, invoiced, processing, shipped, delivered, unavailable, canceled.\n- order_purchase_timestamp: When the customer placed the order. Use this to assign orders to months.\n- order_approved_at: When payment was approved. NULL if never approved.\n- order_delivered_carrier_date: When the seller handed the parcel to the carrier. NULL if not shipped.\n- order_delivered_customer_date: When the customer received the parcel. NULL if not delivered.\n- order_estimated_delivery_date: Delivery date promised to the customer at checkout.\nTable sellers: One row per seller (a business that sells on the marketplace).\n- seller_id: Joins to order_items.seller_id.\n- seller_zip_code_prefix: First 5 digits of the seller's postal code.\n- seller_city: Seller's city.\n- seller_state: Two-letter state code.\n\nSIMILAR EXAMPLE QUERIES:\nQ: What is the average review score by order purchase month?\nSQL: SELECT strftime('%Y-%m', o.order_purchase_timestamp) AS month, COUNT(*) AS reviews, ROUND(AVG(r.review_score), 2) AS avg_review_score FROM order_reviews r JOIN orders o ON o.order_id = r.order... [2540 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: SELECT ROUND(100.0 * SUM(CASE WHEN review_score IN (1,2) THEN 1 ELSE 0 END) / COUNT(*), 2) AS negative_review_share_pct,",
+      "success": true,
+      "duration_ms": 10992.7,
+      "llm_calls": 1,
+      "input": "What share of reviews are negative (score 1 or 2), and what is the maximum share of negative reviews the moderation policy allows?",
+      "output": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score IN (1,2) THEN 1 ELSE 0 END) / COUNT(*), 2) AS negative_review_share_pct,\n       NULL AS max_allowed_negative_share_pct\nFROM order_reviews\nLIMIT 1"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 1.1,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score IN (1,2) THEN 1 ELSE 0 END) / COUNT(*), 2) AS negative_review_share_pct,\n       NULL AS max_allowed_negative_share_pct\nFROM order_reviews\nLIMIT 1",
+      "output": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score IN (1, 2) THEN 1 ELSE 0 END) / COUNT(*), 2) AS negative_review_share_pct, NULL AS max_allowed_negative_share_pct FROM order_reviews LIMIT 1"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "1 rows, 2 columns in 0.0 ms",
+      "success": true,
+      "duration_ms": 5.0,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score IN (1, 2) THEN 1 ELSE 0 END) / COUNT(*), 2) AS negative_review_share_pct, NULL AS max_allowed_negative_share_pct FROM order_reviews LIMIT 1",
+      "output": "[[14.69, null]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (745 chars)",
+      "success": true,
+      "duration_ms": 13834.1,
+      "llm_calls": 1,
+      "input": "rows=1, chunks=4",
+      "output": "**Negative reviews make up 14.69\u202f% of all reviews.**  \nThe moderation policy does not specify any maximum allowed share of negative reviews.\n\n- The database query returned a negative\u2011review share of **14.69\u202f%** (computed as\u202f100\u202f\u00d7\u202fnegative reviews \u00f7 total reviews)\u3010query results\u3011.  \n- A \u201cnegative review\u201d is defined as a score of\u202f1\u202for\u202f2 in the policy document\u3010review_moderation.md (2. Meaning of the review score)\u3011.  \n- The moderation policy lists removal criteria (personal data, abusive language, off\u2011topic, non\u2011buyer) but contains no rule limiting the proportion of negative scores\u3010review_moderation.md (4. Which reviews are published)\u3011.  \n\n*Therefore, the current share is 14.69\u202f%, and there is no stated maximum share allowed by the policy.*"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-01",
+  "question": "How many days after delivery does a customer have to report a product that arrived damaged?",
+  "route": "DOCS",
+  "answer": "**Answer:** The provided documents do not specify a reporting window for customers to report a damaged product after delivery.  \n\n- The seller guidelines and delivery SLA discuss shipping limits, handling time, and reporting rules for delivery performance, but none mention a time limit for damage claims.  \n- The refund policy only addresses compensation for late delivery, not for damaged items.  \n\nTherefore, the required number of days after delivery for reporting damage is not available in the supplied information.",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 7333.1,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question asks for a policy definition, not data from the database.",
+      "success": true,
+      "duration_ms": 1941.6,
+      "llm_calls": 1,
+      "input": "How many days after delivery does a customer have to report a product that arrived damaged?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"How many days after delivery does a customer have to report a product that arrived damaged?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Locate the policy that specifies the allowed time window for customers to report a product as damaged after delivery.\"}], \"reason\": \"The question asks for a policy definition, not data from the database.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md, refund_policy.md, seller_guidelines.md",
+      "success": true,
+      "duration_ms": 42.4,
+      "llm_calls": 0,
+      "input": "How many days after delivery does a customer have to report a product that arrived damaged?",
+      "output": "[\"seller_guidelines.md (0.5667)\", \"delivery_sla.md (0.5324)\", \"refund_policy.md (0.4909)\", \"delivery_sla.md (0.4842)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (521 chars)",
+      "success": true,
+      "duration_ms": 5349.1,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**Answer:** The provided documents do not specify a reporting window for customers to report a damaged product after delivery.  \n\n- The seller guidelines and delivery SLA discuss shipping limits, handling time, and reporting rules for delivery performance, but none mention a time limit for damage claims.  \n- The refund policy only addresses compensation for late delivery, not for damaged items.  \n\nTherefore, the required number of days after delivery for reporting damage is not available in the supplied information."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-07",
+  "question": "What is the difference between customer_id and customer_unique_id?",
+  "route": "DOCS",
+  "answer": "**Answer:**  \n`customer_id` identifies a specific order\u2011level record and changes for each purchase, while `customer_unique_id` uniquely identifies the actual person across all of their orders.\n\n- `customer_id` \u201cchanges with every order, so it is a key between `orders` and `customers`\u201d\u202f[data_dictionary.md].  \n- The \u201creal person is `customer_unique_id`\u201d and should be used to count distinct buyers\u202f[data_dictionary.md].  \n- In the `customers` table, each row represents one order (`customer_id`), whereas `customer_unique_id` stays constant for the same individual across multiple orders\u202f[data_dictionary.md].",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 6644.4,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question asks for definitions of fields, which are found in the documentation, not in the data.",
+      "success": true,
+      "duration_ms": 728.9,
+      "llm_calls": 1,
+      "input": "What is the difference between customer_id and customer_unique_id?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"What is the difference between customer_id and customer_unique_id?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Explain the difference between customer_id and customer_unique_id according to the data dictionary.\"}], \"reason\": \"The question asks for definitions of fields, which are found in the documentation, not in the data.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from data_dictionary.md, metrics_glossary.md",
+      "success": true,
+      "duration_ms": 20.9,
+      "llm_calls": 0,
+      "input": "What is the difference between customer_id and customer_unique_id?",
+      "output": "[\"data_dictionary.md (0.6776)\", \"data_dictionary.md (0.4317)\", \"metrics_glossary.md (0.3722)\", \"data_dictionary.md (0.3509)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (609 chars)",
+      "success": true,
+      "duration_ms": 5894.6,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**Answer:**  \n`customer_id` identifies a specific order\u2011level record and changes for each purchase, while `customer_unique_id` uniquely identifies the actual person across all of their orders.\n\n- `customer_id` \u201cchanges with every order, so it is a key between `orders` and `customers`\u201d\u202f[data_dictionary.md].  \n- The \u201creal person is `customer_unique_id`\u201d and should be used to count distinct buyers\u202f[data_dictionary.md].  \n- In the `customers` table, each row represents one order (`customer_id`), whereas `customer_unique_id` stays constant for the same individual across multiple orders\u202f[data_dictionary.md]."
+    }
+  ]
+}

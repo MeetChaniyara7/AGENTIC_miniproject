@@ -1,0 +1,78 @@
+{
+  "thread_id": "hyb-03",
+  "question": "What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?",
+  "route": "BOTH",
+  "answer": "**Answer:**  \n- The average review score for late deliveries is **2.57**.  \n- The marketplace review policy targets an average review score of **4.0**.\n\n**Supporting details**\n\n- The figure\u202f2.57 comes from the database query that averaged review scores for orders delivered after the estimated delivery date (excluding canceled or unavailable orders)\u202f[SQL query result].  \n- The target of\u202f4.0 is specified as the marketplace\u2019s required average review score in the review policy\u202f[review_moderation.md].",
+  "totals": {
+    "nodes": 7,
+    "llm_calls": 3,
+    "duration_ms": 20217.8,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=BOTH: The question requires a data-derived metric (average review score for late deliveries) and a policy-defined target, so both SQL and document sources are needed.",
+      "success": true,
+      "duration_ms": 1277.6,
+      "llm_calls": 1,
+      "input": "What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?",
+      "output": "{\"route\": \"BOTH\", \"rewritten_question\": \"What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Calculate the average review score for orders that were delivered later than the promised delivery date.\"}, {\"type\": \"DOCS\", \"task\": \"Find the target average review score defined in the marketplace's review policy.\"}], \"reason\": \"The question requires a data-derived metric (average review score for late deliveries) and a policy-defined target, so both SQL and document sources are needed.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md, review_moderation.md, seller_guidelines.md",
+      "success": true,
+      "duration_ms": 21.8,
+      "llm_calls": 0,
+      "input": "What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?",
+      "output": "[\"seller_guidelines.md (0.7265)\", \"review_moderation.md (0.7256)\", \"delivery_sla.md (0.7111)\", \"delivery_sla.md (0.5944)\"]"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: order_reviews, orders, order_items",
+      "success": true,
+      "duration_ms": 59.1,
+      "llm_calls": 0,
+      "input": "What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?",
+      "output": "RELEVANT TABLES:\nTable order_reviews: Customer satisfaction reviews. review_id is not unique in the source data, and an order can have more than one review.\n- review_id: Review identifier. Not guaranteed unique.\n- order_id: Joins to orders.order_id.\n- review_score: Integer rating 1 (very poor) to 5 (excellent). 1-2 negative, 4-5 positive.\n- review_comment_title: Optional title in Portuguese. Often NULL.\n- review_comment_message: Optional free-text comment in Portuguese. Often NULL; may contain personal details.\n- review_creation_date: When the satisfaction survey was sent.\n- review_answer_timestamp: When the customer answered the survey.\nTable orders: One row per order with its status and lifecycle timestamps. Central table of the database.\n- order_id: Unique order identifier. Joins to order_items, order_payments and order_reviews.\n- customer_id: Joins to customers.customer_id.\n- order_status: One of created, approved, invoiced, processing, shipped, delivered, unavailable, canceled.\n- order_purchase_timestamp: When the customer placed the order. Use this to assign orders to months.\n- order_approved_at: When payment was approved. NULL if never approved.\n- order_delivered_carrier_date: When the seller handed the parcel to the carrier. NULL if not shipped.\n- order_delivered_customer_date: When the customer received the parcel. NULL if not delivered.\n- order_estimated_delivery_date: Delivery date promised to the customer at checkout.\nTable order_items: One row per product line in an order. An order with 3 items has 3 rows. Source of item revenue and freight.\n- order_id: Joins to orders.order_id.\n- order_item_id: Sequence number of the item within the order, starting at 1.\n- product_id: Joins to products.product_id.\n- seller_id: Joins to sellers.seller_id. The seller who fulfils this item.\n- shipping_limit_date: Deadline for the seller to hand the item to the carrier.\n- price: Item price in BRL, excluding freight.\n- freight_value: Freight charge in BRL for this item.\n\nSI... [2821 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: SELECT ROUND(AVG(r.review_score), 2) AS avg_review_score_late_deliveries,\n       4.0 AS target_avg_review_score\nFROM ord",
+      "success": true,
+      "duration_ms": 12942.9,
+      "llm_calls": 1,
+      "input": "What is the average review score of late deliveries, and what average score does the review policy target for the marketplace?",
+      "output": "SELECT ROUND(AVG(r.review_score), 2) AS avg_review_score_late_deliveries,\n       4.0 AS target_avg_review_score\nFROM orders o\nJOIN order_reviews r ON r.order_id = o.order_id\nWHERE o.order_delivered_customer_date IS NOT NULL\n  AND o.order_estimated_delivery_date IS NOT NULL\n  AND o.order_delivered_customer_date > o.order_estimated_delivery_date\n  AND o.order_status NOT IN ('canceled','unavailable')\nLIMIT 1"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 1.6,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(AVG(r.review_score), 2) AS avg_review_score_late_deliveries,\n       4.0 AS target_avg_review_score\nFROM orders o\nJOIN order_reviews r ON r.order_id = o.order_id\nWHERE o.order_delivered_customer_date IS NOT NULL\n  AND o.order_estimated_delivery_date IS NOT NULL\n  AND o.order_delivered_customer_date > o.order_estimated_delivery_date\n  AND o.order_status NOT IN ('canceled','unavailable')\nLIMIT 1",
+      "output": "SELECT ROUND(AVG(r.review_score), 2) AS avg_review_score_late_deliveries, 4.0 AS target_avg_review_score FROM orders AS o JOIN order_reviews AS r ON r.order_id = o.order_id WHERE NOT o.order_delivered_customer_date IS NULL AND NOT o.order_estimated_delivery_date IS NULL AND o.order_delivered_customer_date > o.order_estimated_delivery_date AND NOT o.order_status IN ('canceled', 'unavailable') LIMIT 1"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "1 rows, 2 columns in 687.0 ms",
+      "success": true,
+      "duration_ms": 687.5,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(AVG(r.review_score), 2) AS avg_review_score_late_deliveries, 4.0 AS target_avg_review_score FROM orders AS o JOIN order_reviews AS r ON r.order_id = o.order_id WHERE NOT o.order_delivered_customer_date IS NULL AND NOT o.order_estimated_delivery_date IS NULL AND o.order_delivered_customer_date > o.order_estimated_delivery_date AND NOT o.order_status IN ('canceled', 'unavailable') LIMIT 1",
+      "output": "[[2.57, 4.0]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (501 chars)",
+      "success": true,
+      "duration_ms": 5227.3,
+      "llm_calls": 1,
+      "input": "rows=1, chunks=4",
+      "output": "**Answer:**  \n- The average review score for late deliveries is **2.57**.  \n- The marketplace review policy targets an average review score of **4.0**.\n\n**Supporting details**\n\n- The figure\u202f2.57 comes from the database query that averaged review scores for orders delivered after the estimated delivery date (excluding canceled or unavailable orders)\u202f[SQL query result].  \n- The target of\u202f4.0 is specified as the marketplace\u2019s required average review score in the review policy\u202f[review_moderation.md]."
+    }
+  ]
+}

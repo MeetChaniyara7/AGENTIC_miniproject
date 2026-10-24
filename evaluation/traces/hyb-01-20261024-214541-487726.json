@@ -1,0 +1,105 @@
+{
+  "thread_id": "hyb-01",
+  "question": "What is the overall late delivery rate for delivered orders, and is it below the company target?",
+  "route": "BOTH",
+  "answer": "**Overall late\u2011delivery rate:**\u202f8.11\u202f% of delivered orders were late.  \n**Below the company target?**\u202fNo \u2013 the rate exceeds the target of \u201cBelow\u202f8\u202f%\u201d\u202f[delivery_sla.md \u2013 Service targets].\n\n**Details**\n\n- Query result (delivered orders\u202f=\u202f96,470; late orders\u202f=\u202f7,826) gives a late\u2011delivery rate of **8.11\u202f%** and flags it as **No** for \u201cbelow_target\u201d\u202f[database query].\n- \u201cLate delivery\u201d is defined as `order_delivered_customer_date > order_estimated_delivery_date`\u202f[delivery_sla.md \u2013 Definition of \u201clate delivery\u201d].\n- The company target for the late\u2011delivery rate (all orders) is **Below\u202f8\u202f%**\u202f[delivery_sla.md \u2013 Service targets].",
+  "totals": {
+    "nodes": 10,
+    "llm_calls": 4,
+    "duration_ms": 34305.6,
+    "retries": 1,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=BOTH: The question requires both data analysis (late delivery rate) and a policy reference (company target).",
+      "success": true,
+      "duration_ms": 1135.0,
+      "llm_calls": 1,
+      "input": "What is the overall late delivery rate for delivered orders, and is it below the company target?",
+      "output": "{\"route\": \"BOTH\", \"rewritten_question\": \"What is the overall late delivery rate for delivered orders, and is it below the company target?\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Calculate the percentage of delivered orders that were delivered later than the promised delivery date (late delivery rate) across all orders in the dataset.\"}, {\"type\": \"DOCS\", \"task\": \"Retrieve the company target threshold for the late delivery rate as defined in the delivery SLA or performance metrics policy.\"}], \"reason\": \"The question requires both data analysis (late delivery rate) and a policy reference (company target).\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md, metrics_glossary.md",
+      "success": true,
+      "duration_ms": 22.7,
+      "llm_calls": 0,
+      "input": "What is the overall late delivery rate for delivered orders, and is it below the company target?",
+      "output": "[\"delivery_sla.md (0.6997)\", \"delivery_sla.md (0.6457)\", \"metrics_glossary.md (0.6186)\", \"delivery_sla.md (0.5983)\"]"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: order_items, orders, order_reviews",
+      "success": true,
+      "duration_ms": 65.4,
+      "llm_calls": 0,
+      "input": "What is the overall late delivery rate for delivered orders, and is it below the company target?",
+      "output": "RELEVANT TABLES:\nTable order_items: One row per product line in an order. An order with 3 items has 3 rows. Source of item revenue and freight.\n- order_id: Joins to orders.order_id.\n- order_item_id: Sequence number of the item within the order, starting at 1.\n- product_id: Joins to products.product_id.\n- seller_id: Joins to sellers.seller_id. The seller who fulfils this item.\n- shipping_limit_date: Deadline for the seller to hand the item to the carrier.\n- price: Item price in BRL, excluding freight.\n- freight_value: Freight charge in BRL for this item.\nTable orders: One row per order with its status and lifecycle timestamps. Central table of the database.\n- order_id: Unique order identifier. Joins to order_items, order_payments and order_reviews.\n- customer_id: Joins to customers.customer_id.\n- order_status: One of created, approved, invoiced, processing, shipped, delivered, unavailable, canceled.\n- order_purchase_timestamp: When the customer placed the order. Use this to assign orders to months.\n- order_approved_at: When payment was approved. NULL if never approved.\n- order_delivered_carrier_date: When the seller handed the parcel to the carrier. NULL if not shipped.\n- order_delivered_customer_date: When the customer received the parcel. NULL if not delivered.\n- order_estimated_delivery_date: Delivery date promised to the customer at checkout.\nTable order_reviews: Customer satisfaction reviews. review_id is not unique in the source data, and an order can have more than one review.\n- review_id: Review identifier. Not guaranteed unique.\n- order_id: Joins to orders.order_id.\n- review_score: Integer rating 1 (very poor) to 5 (excellent). 1-2 negative, 4-5 positive.\n- review_comment_title: Optional title in Portuguese. Often NULL.\n- review_comment_message: Optional free-text comment in Portuguese. Often NULL; may contain personal details.\n- review_creation_date: When the satisfaction survey was sent.\n- review_answer_timestamp: When the customer answered the survey.\n\nSI... [2921 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: WITH stats AS (\n    SELECT\n        COUNT(*) AS delivered_orders,\n        SUM(CASE WHEN order_delivered_customer_date > o",
+      "success": true,
+      "duration_ms": 11950.0,
+      "llm_calls": 1,
+      "input": "What is the overall late delivery rate for delivered orders, and is it below the company target?",
+      "output": "WITH stats AS (\n    SELECT\n        COUNT(*) AS delivered_orders,\n        SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders\n    FROM orders\n    WHERE order_status = 'delivered'\n      AND order_delivered_customer_date IS NOT NULL\n)\nSELECT\n    delivered_orders,\n    late_orders,\n    ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct,\n    CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target;"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 2.0,
+      "llm_calls": 0,
+      "input": "WITH stats AS (\n    SELECT\n        COUNT(*) AS delivered_orders,\n        SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders\n    FROM orders\n    WHERE order_status = 'delivered'\n      AND order_delivered_customer_date IS NOT NULL\n)\nSELECT\n    delivered_orders,\n    late_orders,\n    ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct,\n    CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target;",
+      "output": "WITH stats AS (SELECT COUNT(*) AS delivered_orders, SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders FROM orders WHERE order_status = 'delivered' AND NOT order_delivered_customer_date IS NULL) SELECT delivered_orders, late_orders, ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct, CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target LIMIT 200"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "error: SQLite error: no such column: delivered_orders",
+      "success": false,
+      "duration_ms": 1.2,
+      "llm_calls": 0,
+      "input": "WITH stats AS (SELECT COUNT(*) AS delivered_orders, SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders FROM orders WHERE order_status = 'delivered' AND NOT order_delivered_customer_date IS NULL) SELECT delivered_orders, late_orders, ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct, CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target LIMIT 200",
+      "output": "SQLite error: no such column: delivered_orders"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "retry 1/3: WITH stats AS (\n    SELECT \n        COUNT(*) AS delivered_orders,\n        SUM(CASE WHEN order_delivered_customer_date > ",
+      "success": true,
+      "duration_ms": 13351.2,
+      "llm_calls": 1,
+      "input": "\nYour previous query was:\nWITH stats AS (SELECT COUNT(*) AS delivered_orders, SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders FROM orders WHERE order_status = 'delivered' AND NOT order_delivered_customer_date IS NULL) SELECT delivered_orders, late_orders, ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct, CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target LIMIT 200\nIt failed with this error:\nSQLite error: no such column: delivered_orders\nWrite a corrected query that fixes this error.\n",
+      "output": "WITH stats AS (\n    SELECT \n        COUNT(*) AS delivered_orders,\n        SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders\n    FROM orders\n    WHERE order_status = 'delivered'\n      AND order_delivered_customer_date IS NOT NULL\n)\nSELECT\n    delivered_orders,\n    late_orders,\n    ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct,\n    CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target\nFROM stats\nLIMIT 200"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 2.0,
+      "llm_calls": 0,
+      "input": "WITH stats AS (\n    SELECT \n        COUNT(*) AS delivered_orders,\n        SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders\n    FROM orders\n    WHERE order_status = 'delivered'\n      AND order_delivered_customer_date IS NOT NULL\n)\nSELECT\n    delivered_orders,\n    late_orders,\n    ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct,\n    CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target\nFROM stats\nLIMIT 200",
+      "output": "WITH stats AS (SELECT COUNT(*) AS delivered_orders, SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders FROM orders WHERE order_status = 'delivered' AND NOT order_delivered_customer_date IS NULL) SELECT delivered_orders, late_orders, ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct, CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target FROM stats LIMIT 200"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "1 rows, 4 columns in 16.0 ms",
+      "success": true,
+      "duration_ms": 27.0,
+      "llm_calls": 0,
+      "input": "WITH stats AS (SELECT COUNT(*) AS delivered_orders, SUM(CASE WHEN order_delivered_customer_date > order_estimated_delivery_date THEN 1 ELSE 0 END) AS late_orders FROM orders WHERE order_status = 'delivered' AND NOT order_delivered_customer_date IS NULL) SELECT delivered_orders, late_orders, ROUND(100.0 * late_orders / delivered_orders, 2) AS late_rate_pct, CASE WHEN ROUND(100.0 * late_orders / delivered_orders, 2) < 8 THEN 'Yes' ELSE 'No' END AS below_target FROM stats LIMIT 200",
+      "output": "[[96470, 7826, 8.11, \"No\"]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (627 chars)",
+      "success": true,
+      "duration_ms": 7749.1,
+      "llm_calls": 1,
+      "input": "rows=1, chunks=4",
+      "output": "**Overall late\u2011delivery rate:**\u202f8.11\u202f% of delivered orders were late.  \n**Below the company target?**\u202fNo \u2013 the rate exceeds the target of \u201cBelow\u202f8\u202f%\u201d\u202f[delivery_sla.md \u2013 Service targets].\n\n**Details**\n\n- Query result (delivered orders\u202f=\u202f96,470; late orders\u202f=\u202f7,826) gives a late\u2011delivery rate of **8.11\u202f%** and flags it as **No** for \u201cbelow_target\u201d\u202f[database query].\n- \u201cLate delivery\u201d is defined as `order_delivered_customer_date > order_estimated_delivery_date`\u202f[delivery_sla.md \u2013 Definition of \u201clate delivery\u201d].\n- The company target for the late\u2011delivery rate (all orders) is **Below\u202f8\u202f%**\u202f[delivery_sla.md \u2013 Service targets]."
+    }
+  ]
+}

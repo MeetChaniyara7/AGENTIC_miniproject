@@ -1,0 +1,12 @@
+# Core stack (see CLAUDE.md). Optional providers are installed only when needed.
+langchain>=0.3
+langgraph>=0.2
+langchain-text-splitters>=0.3
+langchain-google-genai>=2.0
+langchain-groq>=0.2
+langchain-ollama>=0.2
+chromadb>=0.5
+sentence-transformers>=3.0
+streamlit>=1.38
+pytest>=8.0
+sqlglot>=25.0

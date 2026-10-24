@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-03",
+  "question": "What commission percentage does the marketplace charge sellers on the item price?",
+  "route": "DOCS",
+  "answer": "**The marketplace charges a\u202f**16%** commission on the item price.**\n\n- The seller guidelines state: \u201cOlist charges a commission of **16%** of the item price (`price` in `order_items`)\u201d\u3010seller_guidelines.md\u3011.  \n- This commission is applied to the seller\u2019s gross revenue (the sum of `price`), with an additional fixed fee of BRL\u202f5.00 for low\u2011value orders, but the percentage component is 16%.",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 9795.7,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question asks for a policy definition (commission rate), not data from the database.",
+      "success": true,
+      "duration_ms": 1811.4,
+      "llm_calls": 1,
+      "input": "What commission percentage does the marketplace charge sellers on the item price?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"What commission percentage does the marketplace charge sellers on the item price?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Find the commission percentage charged to sellers on the item price in the seller guidelines or related policy documents.\"}], \"reason\": \"The question asks for a policy definition (commission rate), not data from the database.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from metrics_glossary.md, review_moderation.md, seller_guidelines.md",
+      "success": true,
+      "duration_ms": 20.3,
+      "llm_calls": 0,
+      "input": "What commission percentage does the marketplace charge sellers on the item price?",
+      "output": "[\"seller_guidelines.md (0.6325)\", \"seller_guidelines.md (0.4457)\", \"metrics_glossary.md (0.4371)\", \"review_moderation.md (0.436)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (390 chars)",
+      "success": true,
+      "duration_ms": 7964.0,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**The marketplace charges a\u202f**16%** commission on the item price.**\n\n- The seller guidelines state: \u201cOlist charges a commission of **16%** of the item price (`price` in `order_items`)\u201d\u3010seller_guidelines.md\u3011.  \n- This commission is applied to the seller\u2019s gross revenue (the sum of `price`), with an additional fixed fee of BRL\u202f5.00 for low\u2011value orders, but the percentage component is 16%."
+    }
+  ]
+}

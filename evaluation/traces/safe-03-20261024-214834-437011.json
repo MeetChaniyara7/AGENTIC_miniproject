@@ -1,0 +1,33 @@
+{
+  "thread_id": "safe-03",
+  "question": "Write me a short poem about the ocean.",
+  "route": "OUT_OF_SCOPE",
+  "answer": "I can only help with questions about this marketplace: order, delivery, payment, review, seller and product data, and the company's policies and metric definitions. Please ask something in that area.",
+  "totals": {
+    "nodes": 2,
+    "llm_calls": 1,
+    "duration_ms": 998.1,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=OUT_OF_SCOPE: The request is unrelated to the marketplace data, policies, or business analytics.",
+      "success": true,
+      "duration_ms": 998.1,
+      "llm_calls": 1,
+      "input": "Write me a short poem about the ocean.",
+      "output": "{\"route\": \"OUT_OF_SCOPE\", \"rewritten_question\": \"Write me a short poem about the ocean.\", \"sub_tasks\": [], \"reason\": \"The request is unrelated to the marketplace data, policies, or business analytics.\"}"
+    },
+    {
+      "node": "out_of_scope",
+      "summary": "declined: question is outside the business domain",
+      "success": true,
+      "duration_ms": 0.0,
+      "llm_calls": 0,
+      "input": "Write me a short poem about the ocean.",
+      "output": null
+    }
+  ]
+}

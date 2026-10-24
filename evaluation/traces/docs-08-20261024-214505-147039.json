@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-08",
+  "question": "How is average order value defined in the metrics glossary?",
+  "route": "DOCS",
+  "answer": "**Answer:**  \nThe provided metrics glossary does not contain a definition for \u201caverage order value.\u201d  \n\n- The glossary excerpts include definitions for seller revenue, seller late rate, top category, and several satisfaction metrics, but no entry for average order value is present in the supplied documents.  \n- Therefore, the definition is missing from the available source material.",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 6012.9,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question asks for a definition from the metrics glossary, which is a document source.",
+      "success": true,
+      "duration_ms": 1799.1,
+      "llm_calls": 1,
+      "input": "How is average order value defined in the metrics glossary?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"How is average order value defined in the metrics glossary?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Retrieve the definition of average order value from the metrics glossary document.\"}], \"reason\": \"The question asks for a definition from the metrics glossary, which is a document source.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from metrics_glossary.md",
+      "success": true,
+      "duration_ms": 19.2,
+      "llm_calls": 0,
+      "input": "How is average order value defined in the metrics glossary?",
+      "output": "[\"metrics_glossary.md (0.4914)\", \"metrics_glossary.md (0.4218)\", \"metrics_glossary.md (0.3866)\", \"metrics_glossary.md (0.3666)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (385 chars)",
+      "success": true,
+      "duration_ms": 4194.6,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**Answer:**  \nThe provided metrics glossary does not contain a definition for \u201caverage order value.\u201d  \n\n- The glossary excerpts include definitions for seller revenue, seller late rate, top category, and several satisfaction metrics, but no entry for average order value is present in the supplied documents.  \n- Therefore, the definition is missing from the available source material."
+    }
+  ]
+}

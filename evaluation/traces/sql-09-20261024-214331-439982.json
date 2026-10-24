@@ -1,0 +1,69 @@
+{
+  "thread_id": "sql-09",
+  "question": "What is the average freight value per order item? Round to 2 decimals.",
+  "route": "SQL",
+  "answer": "**Average freight value per order item:\u202f$19.99**\n\n- This figure comes from the database query that calculated `AVG(i.freight_value)` for order items in non\u2011canceled, non\u2011unavailable orders (SQL shown above) and rounded to two decimals.",
+  "totals": {
+    "nodes": 6,
+    "llm_calls": 3,
+    "duration_ms": 7948.9,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=SQL: The question requires a factual calculation from the database only.",
+      "success": true,
+      "duration_ms": 1028.3,
+      "llm_calls": 1,
+      "input": "What is the average freight value per order item? Round to 2 decimals.",
+      "output": "{\"route\": \"SQL\", \"rewritten_question\": \"What is the average freight value per order item?\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Calculate the average freight value across all order items and round the result to two decimal places.\"}], \"reason\": \"The question requires a factual calculation from the database only.\"}"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: order_items, sellers, orders",
+      "success": true,
+      "duration_ms": 56.5,
+      "llm_calls": 0,
+      "input": "What is the average freight value per order item?",
+      "output": "RELEVANT TABLES:\nTable order_items: One row per product line in an order. An order with 3 items has 3 rows. Source of item revenue and freight.\n- order_id: Joins to orders.order_id.\n- order_item_id: Sequence number of the item within the order, starting at 1.\n- product_id: Joins to products.product_id.\n- seller_id: Joins to sellers.seller_id. The seller who fulfils this item.\n- shipping_limit_date: Deadline for the seller to hand the item to the carrier.\n- price: Item price in BRL, excluding freight.\n- freight_value: Freight charge in BRL for this item.\nTable sellers: One row per seller (a business that sells on the marketplace).\n- seller_id: Joins to order_items.seller_id.\n- seller_zip_code_prefix: First 5 digits of the seller's postal code.\n- seller_city: Seller's city.\n- seller_state: Two-letter state code.\nTable orders: One row per order with its status and lifecycle timestamps. Central table of the database.\n- order_id: Unique order identifier. Joins to order_items, order_payments and order_reviews.\n- customer_id: Joins to customers.customer_id.\n- order_status: One of created, approved, invoiced, processing, shipped, delivered, unavailable, canceled.\n- order_purchase_timestamp: When the customer placed the order. Use this to assign orders to months.\n- order_approved_at: When payment was approved. NULL if never approved.\n- order_delivered_carrier_date: When the seller handed the parcel to the carrier. NULL if not shipped.\n- order_delivered_customer_date: When the customer received the parcel. NULL if not delivered.\n- order_estimated_delivery_date: Delivery date promised to the customer at checkout.\n\nSIMILAR EXAMPLE QUERIES:\nQ: What is the average order value (price plus freight) per month, excluding cancelled and unavailable orders?\nSQL: SELECT strftime('%Y-%m', o.order_purchase_timestamp) AS month, COUNT(DISTINCT o.order_id) AS orders, ROUND(SUM(i.price + i.freight_value) / COUNT(DISTINCT o.order_id), 2) AS avg_order_value FROM orders o JOIN order_items i ON i.... [2399 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: SELECT ROUND(AVG(i.freight_value), 2) AS avg_freight_per_item\nFROM order_items i\nJOIN orders o ON i.order_id = o.order_i",
+      "success": true,
+      "duration_ms": 5803.8,
+      "llm_calls": 1,
+      "input": "What is the average freight value per order item?",
+      "output": "SELECT ROUND(AVG(i.freight_value), 2) AS avg_freight_per_item\nFROM order_items i\nJOIN orders o ON i.order_id = o.order_id\nWHERE o.order_status NOT IN ('canceled', 'unavailable');"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 1.1,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(AVG(i.freight_value), 2) AS avg_freight_per_item\nFROM order_items i\nJOIN orders o ON i.order_id = o.order_id\nWHERE o.order_status NOT IN ('canceled', 'unavailable');",
+      "output": "SELECT ROUND(AVG(i.freight_value), 2) AS avg_freight_per_item FROM order_items AS i JOIN orders AS o ON i.order_id = o.order_id WHERE NOT o.order_status IN ('canceled', 'unavailable') LIMIT 200"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "1 rows, 1 columns in 390.0 ms",
+      "success": true,
+      "duration_ms": 396.6,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(AVG(i.freight_value), 2) AS avg_freight_per_item FROM order_items AS i JOIN orders AS o ON i.order_id = o.order_id WHERE NOT o.order_status IN ('canceled', 'unavailable') LIMIT 200",
+      "output": "[[19.99]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (235 chars)",
+      "success": true,
+      "duration_ms": 662.6,
+      "llm_calls": 1,
+      "input": "rows=1, chunks=0",
+      "output": "**Average freight value per order item:\u202f$19.99**\n\n- This figure comes from the database query that calculated `AVG(i.freight_value)` for order items in non\u2011canceled, non\u2011unavailable orders (SQL shown above) and rounded to two decimals."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-02",
+  "question": "What compensation does a customer receive if an order arrives 10 days late?",
+  "route": "DOCS",
+  "answer": "**A customer receives a voucher worth\u202f10\u202f% of the item price (capped at\u202fBRL\u202f150 per order) for a delivery that is 10\u202fdays late.**  \n\n- The compensation tier for deliveries\u202f8\u202fto\u202f14\u202fdays late is a voucher equal to\u202f10\u202f% of the item price\u3010refund_policy.md\u3011.  \n- Compensation is limited to a maximum of\u202fBRL\u202f150 per order\u3010refund_policy.md\u3011.",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 5893.3,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question asks about a policy definition, not about data from the database.",
+      "success": true,
+      "duration_ms": 889.4,
+      "llm_calls": 1,
+      "input": "What compensation does a customer receive if an order arrives 10 days late?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"What compensation does a customer receive if an order arrives 10 days late?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Find the compensation policy for customers when an order is delivered 10 days later than the promised delivery date.\"}], \"reason\": \"The question asks about a policy definition, not about data from the database.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md, refund_policy.md",
+      "success": true,
+      "duration_ms": 20.7,
+      "llm_calls": 0,
+      "input": "What compensation does a customer receive if an order arrives 10 days late?",
+      "output": "[\"refund_policy.md (0.7554)\", \"delivery_sla.md (0.5569)\", \"delivery_sla.md (0.554)\", \"refund_policy.md (0.5538)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (334 chars)",
+      "success": true,
+      "duration_ms": 4983.2,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**A customer receives a voucher worth\u202f10\u202f% of the item price (capped at\u202fBRL\u202f150 per order) for a delivery that is 10\u202fdays late.**  \n\n- The compensation tier for deliveries\u202f8\u202fto\u202f14\u202fdays late is a voucher equal to\u202f10\u202f% of the item price\u3010refund_policy.md\u3011.  \n- Compensation is limited to a maximum of\u202fBRL\u202f150 per order\u3010refund_policy.md\u3011."
+    }
+  ]
+}

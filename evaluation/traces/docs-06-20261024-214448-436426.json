@@ -1,0 +1,42 @@
+{
+  "thread_id": "docs-06",
+  "question": "What is the company target for the late delivery rate across all orders?",
+  "route": "DOCS",
+  "answer": "**Target:**\u202fThe company aims for a late\u2011delivery rate of **below\u202f8\u202f%** across all orders.\n\n- The service\u2011targets table lists \u201cLate delivery rate (all orders) \u2013 Target: Below\u202f8\u202f%\u201d\u3010delivery_sla.md\u3011.",
+  "totals": {
+    "nodes": 3,
+    "llm_calls": 2,
+    "duration_ms": 9174.3,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=DOCS: The question asks for a policy target, not data from the database.",
+      "success": true,
+      "duration_ms": 2871.9,
+      "llm_calls": 1,
+      "input": "What is the company target for the late delivery rate across all orders?",
+      "output": "{\"route\": \"DOCS\", \"rewritten_question\": \"What is the company target for the late delivery rate across all orders?\", \"sub_tasks\": [{\"type\": \"DOCS\", \"task\": \"Find the company target/threshold for the late delivery rate metric in the policies or metrics glossary.\"}], \"reason\": \"The question asks for a policy target, not data from the database.\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md, metrics_glossary.md",
+      "success": true,
+      "duration_ms": 20.3,
+      "llm_calls": 0,
+      "input": "What is the company target for the late delivery rate across all orders?",
+      "output": "[\"delivery_sla.md (0.6766)\", \"delivery_sla.md (0.6491)\", \"metrics_glossary.md (0.6376)\", \"delivery_sla.md (0.5882)\"]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (196 chars)",
+      "success": true,
+      "duration_ms": 6282.1,
+      "llm_calls": 1,
+      "input": "rows=0, chunks=4",
+      "output": "**Target:**\u202fThe company aims for a late\u2011delivery rate of **below\u202f8\u202f%** across all orders.\n\n- The service\u2011targets table lists \u201cLate delivery rate (all orders) \u2013 Target: Below\u202f8\u202f%\u201d\u3010delivery_sla.md\u3011."
+    }
+  ]
+}

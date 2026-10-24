@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+chroma_db/
+llm_cache/
+/traces/
+eval_results/
+
+# Olist raw CSVs and the built database are large and downloaded separately
+data/raw/*
+!data/raw/.gitkeep
+data/olist.db
+.claude/
+report/_dump.txt

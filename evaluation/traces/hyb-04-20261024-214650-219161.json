@@ -1,0 +1,78 @@
+{
+  "thread_id": "hyb-04",
+  "question": "Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?",
+  "route": "BOTH",
+  "answer": "**Answer:**\u202fAlabama (AL) has the highest late\u2011delivery rate (23.93\u202f%) among states with \u226530 delivered orders, and the SLA sets a state\u2011level target of 12\u202f% late deliveries.\n\n- The database query returned AL with 397 delivered orders and a late\u2011rate of\u202f23.93\u202f% (query result)\u3010query results\u3011.  \n- The query also included a column `sla_target_pct` of\u202f12.0, representing the SLA target for a single state\u3010query results\u3011.  \n- The SLA document defines the state\u2011level target as \u201cBelow\u202f12\u202f%\u201d for the late delivery rate\u3010delivery_sla.md\u3011.",
+  "totals": {
+    "nodes": 7,
+    "llm_calls": 3,
+    "duration_ms": 21238.3,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=BOTH: The question requires both data analysis (late delivery rates) and a policy definition (SLA target).",
+      "success": true,
+      "duration_ms": 1086.1,
+      "llm_calls": 1,
+      "input": "Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?",
+      "output": "{\"route\": \"BOTH\", \"rewritten_question\": \"Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Calculate the late delivery rate for each customer state based on delivered orders, filter to states with at least 30 delivered orders, and identify the state with the highest rate.\"}, {\"type\": \"DOCS\", \"task\": \"Retrieve the state-level target for delivery time from the delivery SLA policy document.\"}], \"reason\": \"The question requires both data analysis (late delivery rates) and a policy definition (SLA target).\"}"
+    },
+    {
+      "node": "retrieve_docs",
+      "summary": "4 chunks from delivery_sla.md",
+      "success": true,
+      "duration_ms": 23.9,
+      "llm_calls": 0,
+      "input": "Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?",
+      "output": "[\"delivery_sla.md (0.6426)\", \"delivery_sla.md (0.5239)\", \"delivery_sla.md (0.5112)\", \"delivery_sla.md (0.5024)\"]"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: order_items, orders, sellers",
+      "success": true,
+      "duration_ms": 60.9,
+      "llm_calls": 0,
+      "input": "Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?",
+      "output": "RELEVANT TABLES:\nTable order_items: One row per product line in an order. An order with 3 items has 3 rows. Source of item revenue and freight.\n- order_id: Joins to orders.order_id.\n- order_item_id: Sequence number of the item within the order, starting at 1.\n- product_id: Joins to products.product_id.\n- seller_id: Joins to sellers.seller_id. The seller who fulfils this item.\n- shipping_limit_date: Deadline for the seller to hand the item to the carrier.\n- price: Item price in BRL, excluding freight.\n- freight_value: Freight charge in BRL for this item.\nTable orders: One row per order with its status and lifecycle timestamps. Central table of the database.\n- order_id: Unique order identifier. Joins to order_items, order_payments and order_reviews.\n- customer_id: Joins to customers.customer_id.\n- order_status: One of created, approved, invoiced, processing, shipped, delivered, unavailable, canceled.\n- order_purchase_timestamp: When the customer placed the order. Use this to assign orders to months.\n- order_approved_at: When payment was approved. NULL if never approved.\n- order_delivered_carrier_date: When the seller handed the parcel to the carrier. NULL if not shipped.\n- order_delivered_customer_date: When the customer received the parcel. NULL if not delivered.\n- order_estimated_delivery_date: Delivery date promised to the customer at checkout.\nTable sellers: One row per seller (a business that sells on the marketplace).\n- seller_id: Joins to order_items.seller_id.\n- seller_zip_code_prefix: First 5 digits of the seller's postal code.\n- seller_city: Seller's city.\n- seller_state: Two-letter state code.\n\nSIMILAR EXAMPLE QUERIES:\nQ: Which 10 customer states have the highest late delivery rate (states with at least 30 delivered orders)?\nSQL: SELECT c.customer_state, COUNT(*) AS delivered_orders, ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct FROM orders o JOIN customers c ON c.customer_id = o.custome... [2789 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: WITH state_rates AS (\n SELECT c.customer_state,\n        COUNT(*) AS delivered_orders,\n        ROUND(100.0 * SUM(o.order_",
+      "success": true,
+      "duration_ms": 16180.8,
+      "llm_calls": 1,
+      "input": "Which customer state has the highest late delivery rate among states with at least 30 delivered orders, and what is the state-level target in the SLA?",
+      "output": "WITH state_rates AS (\n SELECT c.customer_state,\n        COUNT(*) AS delivered_orders,\n        ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct\n FROM orders o\n JOIN customers c ON c.customer_id = o.customer_id\n WHERE o.order_status = 'delivered'\n   AND o.order_delivered_customer_date IS NOT NULL\n GROUP BY c.customer_state\n HAVING COUNT(*) >= 30\n)\nSELECT customer_state,\n       delivered_orders,\n       late_rate_pct,\n       12.0 AS sla_target_pct\nFROM state_rates\nORDER BY late_rate_pct DESC\nLIMIT 1"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 2.4,
+      "llm_calls": 0,
+      "input": "WITH state_rates AS (\n SELECT c.customer_state,\n        COUNT(*) AS delivered_orders,\n        ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct\n FROM orders o\n JOIN customers c ON c.customer_id = o.customer_id\n WHERE o.order_status = 'delivered'\n   AND o.order_delivered_customer_date IS NOT NULL\n GROUP BY c.customer_state\n HAVING COUNT(*) >= 30\n)\nSELECT customer_state,\n       delivered_orders,\n       late_rate_pct,\n       12.0 AS sla_target_pct\nFROM state_rates\nORDER BY late_rate_pct DESC\nLIMIT 1",
+      "output": "WITH state_rates AS (SELECT c.customer_state, COUNT(*) AS delivered_orders, ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND NOT o.order_delivered_customer_date IS NULL GROUP BY c.customer_state HAVING COUNT(*) >= 30) SELECT customer_state, delivered_orders, late_rate_pct, 12.0 AS sla_target_pct FROM state_rates ORDER BY late_rate_pct DESC LIMIT 1"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "1 rows, 4 columns in 672.0 ms",
+      "success": true,
+      "duration_ms": 673.5,
+      "llm_calls": 0,
+      "input": "WITH state_rates AS (SELECT c.customer_state, COUNT(*) AS delivered_orders, ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND NOT o.order_delivered_customer_date IS NULL GROUP BY c.customer_state HAVING COUNT(*) >= 30) SELECT customer_state, delivered_orders, late_rate_pct, 12.0 AS sla_target_pct FROM state_rates ORDER BY late_rate_pct DESC LIMIT 1",
+      "output": "[[\"AL\", 397, 23.93, 12.0]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (529 chars)",
+      "success": true,
+      "duration_ms": 3210.7,
+      "llm_calls": 1,
+      "input": "rows=1, chunks=4",
+      "output": "**Answer:**\u202fAlabama (AL) has the highest late\u2011delivery rate (23.93\u202f%) among states with \u226530 delivered orders, and the SLA sets a state\u2011level target of 12\u202f% late deliveries.\n\n- The database query returned AL with 397 delivered orders and a late\u2011rate of\u202f23.93\u202f% (query result)\u3010query results\u3011.  \n- The query also included a column `sla_target_pct` of\u202f12.0, representing the SLA target for a single state\u3010query results\u3011.  \n- The SLA document defines the state\u2011level target as \u201cBelow\u202f12\u202f%\u201d for the late delivery rate\u3010delivery_sla.md\u3011."
+    }
+  ]
+}

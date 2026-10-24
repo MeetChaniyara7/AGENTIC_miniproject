@@ -1,0 +1,69 @@
+{
+  "thread_id": "sql-05",
+  "question": "What percentage of all reviews have a score of 5? Round to 2 decimals.",
+  "route": "SQL",
+  "answer": "**57.78\u202f%** of all reviews have a score of\u202f5.\n\n- This percentage comes from the database query that calculated `ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2)` over the `order_reviews` table.",
+  "totals": {
+    "nodes": 6,
+    "llm_calls": 3,
+    "duration_ms": 2704.6,
+    "retries": 0,
+    "success": true
+  },
+  "trace": [
+    {
+      "node": "router",
+      "summary": "route=SQL: The question requires a numeric calculation based solely on review data.",
+      "success": true,
+      "duration_ms": 900.6,
+      "llm_calls": 1,
+      "input": "What percentage of all reviews have a score of 5? Round to 2 decimals.",
+      "output": "{\"route\": \"SQL\", \"rewritten_question\": \"What percentage of all reviews have a score of 5?\", \"sub_tasks\": [{\"type\": \"SQL\", \"task\": \"Calculate (COUNT of reviews where score = 5) / (TOTAL COUNT of reviews) * 100, rounded to 2 decimal places.\"}], \"reason\": \"The question requires a numeric calculation based solely on review data.\"}"
+    },
+    {
+      "node": "retrieve_schema",
+      "summary": "tables: order_reviews, sellers, customers",
+      "success": true,
+      "duration_ms": 54.3,
+      "llm_calls": 0,
+      "input": "What percentage of all reviews have a score of 5?",
+      "output": "RELEVANT TABLES:\nTable order_reviews: Customer satisfaction reviews. review_id is not unique in the source data, and an order can have more than one review.\n- review_id: Review identifier. Not guaranteed unique.\n- order_id: Joins to orders.order_id.\n- review_score: Integer rating 1 (very poor) to 5 (excellent). 1-2 negative, 4-5 positive.\n- review_comment_title: Optional title in Portuguese. Often NULL.\n- review_comment_message: Optional free-text comment in Portuguese. Often NULL; may contain personal details.\n- review_creation_date: When the satisfaction survey was sent.\n- review_answer_timestamp: When the customer answered the survey.\nTable sellers: One row per seller (a business that sells on the marketplace).\n- seller_id: Joins to order_items.seller_id.\n- seller_zip_code_prefix: First 5 digits of the seller's postal code.\n- seller_city: Seller's city.\n- seller_state: Two-letter state code.\nTable customers: One row per customer record. A customer_id exists per order; the real person is customer_unique_id.\n- customer_id: Key used to join orders to customers. Different for every order, even for the same person.\n- customer_unique_id: Identifier of the real person across orders. Count distinct values to count buyers. [SENSITIVE: aggregate only]\n- customer_zip_code_prefix: First 5 digits of the customer's postal code. Approximate home area. [SENSITIVE: aggregate only]\n- customer_city: Customer's city, lowercase Portuguese name.\n- customer_state: Two-letter Brazilian state code, e.g. SP, RJ, MG.\n\nSIMILAR EXAMPLE QUERIES:\nQ: What is the average review score by order purchase month?\nSQL: SELECT strftime('%Y-%m', o.order_purchase_timestamp) AS month, COUNT(*) AS reviews, ROUND(AVG(r.review_score), 2) AS avg_review_score FROM order_reviews r JOIN orders o ON o.order_id = r.order_id GROUP BY month ORDER BY month\nQ: Do late deliveries get more 1-star reviews than on-time deliveries?\nSQL: SELECT CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN... [2343 chars]"
+    },
+    {
+      "node": "generate_sql",
+      "summary": "first attempt: SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_five_star_reviews FROM orde",
+      "success": true,
+      "duration_ms": 1073.1,
+      "llm_calls": 1,
+      "input": "What percentage of all reviews have a score of 5?",
+      "output": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_five_star_reviews FROM order_reviews;"
+    },
+    {
+      "node": "validate_sql",
+      "summary": "ok",
+      "success": true,
+      "duration_ms": 1.0,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_five_star_reviews FROM order_reviews;",
+      "output": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_five_star_reviews FROM order_reviews LIMIT 200"
+    },
+    {
+      "node": "execute_sql",
+      "summary": "1 rows, 1 columns in 16.0 ms",
+      "success": true,
+      "duration_ms": 4.7,
+      "llm_calls": 0,
+      "input": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_five_star_reviews FROM order_reviews LIMIT 200",
+      "output": "[[57.78]]"
+    },
+    {
+      "node": "synthesize",
+      "summary": "answer written (223 chars)",
+      "success": true,
+      "duration_ms": 670.9,
+      "llm_calls": 1,
+      "input": "rows=1, chunks=0",
+      "output": "**57.78\u202f%** of all reviews have a score of\u202f5.\n\n- This percentage comes from the database query that calculated `ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2)` over the `order_reviews` table."
+    }
+  ]
+}

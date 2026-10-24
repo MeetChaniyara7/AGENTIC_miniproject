@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "question": "How many orders were placed each month?",
+    "sql": "SELECT strftime('%Y-%m', order_purchase_timestamp) AS month, COUNT(*) AS orders FROM orders GROUP BY month ORDER BY month"
+  },
+  {
+    "id": 2,
+    "question": "How many orders are in each order status?",
+    "sql": "SELECT order_status, COUNT(*) AS orders FROM orders GROUP BY order_status ORDER BY orders DESC"
+  },
+  {
+    "id": 3,
+    "question": "What percentage of delivered orders arrived late?",
+    "sql": "SELECT COUNT(*) AS delivered_orders, SUM(order_delivered_customer_date > order_estimated_delivery_date) AS late_orders, ROUND(100.0 * SUM(order_delivered_customer_date > order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct FROM orders WHERE order_status = 'delivered' AND order_delivered_customer_date IS NOT NULL"
+  },
+  {
+    "id": 4,
+    "question": "Which 10 customer states have the highest late delivery rate (states with at least 30 delivered orders)?",
+    "sql": "SELECT c.customer_state, COUNT(*) AS delivered_orders, ROUND(100.0 * SUM(o.order_delivered_customer_date > o.order_estimated_delivery_date) / COUNT(*), 2) AS late_rate_pct FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL GROUP BY c.customer_state HAVING COUNT(*) >= 30 ORDER BY late_rate_pct DESC LIMIT 10"
+  },
+  {
+    "id": 5,
+    "question": "What is the average review score by order purchase month?",
+    "sql": "SELECT strftime('%Y-%m', o.order_purchase_timestamp) AS month, COUNT(*) AS reviews, ROUND(AVG(r.review_score), 2) AS avg_review_score FROM order_reviews r JOIN orders o ON o.order_id = r.order_id GROUP BY month ORDER BY month"
+  },
+  {
+    "id": 6,
+    "question": "What are the top 10 product categories by item revenue (English names, excluding cancelled and unavailable orders)?",
+    "sql": "SELECT COALESCE(t.product_category_name_english, p.product_category_name, 'unknown') AS category, ROUND(SUM(i.price), 2) AS item_revenue, COUNT(DISTINCT i.order_id) AS orders FROM order_items i JOIN orders o ON o.order_id = i.order_id JOIN products p ON p.product_id = i.product_id LEFT JOIN product_category_translation t ON t.product_category_name = p.product_category_name WHERE o.order_status NOT IN ('canceled', 'unavailable') GROUP BY category ORDER BY item_revenue DESC LIMIT 10"
+  },
+  {
+    "id": 7,
+    "question": "What is the cancellation rate by month?",
+    "sql": "SELECT strftime('%Y-%m', order_purchase_timestamp) AS month, COUNT(*) AS orders, SUM(order_status = 'canceled') AS canceled_orders, ROUND(100.0 * SUM(order_status = 'canceled') / COUNT(*), 2) AS cancellation_rate_pct FROM orders GROUP BY month ORDER BY month"
+  },
+  {
+    "id": 8,
+    "question": "How is payment value split by payment type?",
+    "sql": "SELECT payment_type, COUNT(*) AS payments, ROUND(SUM(payment_value), 2) AS total_value, ROUND(100.0 * SUM(payment_value) / (SELECT SUM(payment_value) FROM order_payments), 2) AS value_share_pct FROM order_payments GROUP BY payment_type ORDER BY total_value DESC"
+  },
+  {
+    "id": 9,
+    "question": "Which 10 sellers have the highest item revenue (sellers with at least 30 orders, excluding cancelled and unavailable orders)?",
+    "sql": "SELECT i.seller_id, s.seller_state, COUNT(DISTINCT i.order_id) AS orders, ROUND(SUM(i.price), 2) AS item_revenue FROM order_items i JOIN orders o ON o.order_id = i.order_id JOIN sellers s ON s.seller_id = i.seller_id WHERE o.order_status NOT IN ('canceled', 'unavailable') GROUP BY i.seller_id HAVING COUNT(DISTINCT i.order_id) >= 30 ORDER BY item_revenue DESC LIMIT 10"
+  },
+  {
+    "id": 10,
+    "question": "What is the average delivery time in days for each customer state, compared with the average estimated time?",
+    "sql": "SELECT c.customer_state, COUNT(*) AS delivered_orders, ROUND(AVG(julianday(o.order_delivered_customer_date) - julianday(o.order_purchase_timestamp)), 1) AS avg_delivery_days, ROUND(AVG(julianday(o.order_estimated_delivery_date) - julianday(o.order_purchase_timestamp)), 1) AS avg_estimated_days FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL GROUP BY c.customer_state ORDER BY avg_delivery_days DESC"
+  },
+  {
+    "id": 11,
+    "question": "Do late deliveries get more 1-star reviews than on-time deliveries?",
+    "sql": "SELECT CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 'late' ELSE 'on_time' END AS delivery, COUNT(*) AS reviews, ROUND(AVG(r.review_score), 2) AS avg_review_score, ROUND(100.0 * SUM(r.review_score = 1) / COUNT(*), 2) AS one_star_pct FROM orders o JOIN order_reviews r ON r.order_id = o.order_id WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL GROUP BY delivery"
+  },
+  {
+    "id": 12,
+    "question": "What is the average order value (price plus freight) per month, excluding cancelled and unavailable orders?",
+    "sql": "SELECT strftime('%Y-%m', o.order_purchase_timestamp) AS month, COUNT(DISTINCT o.order_id) AS orders, ROUND(SUM(i.price + i.freight_value) / COUNT(DISTINCT o.order_id), 2) AS avg_order_value FROM orders o JOIN order_items i ON i.order_id = o.order_id WHERE o.order_status NOT IN ('canceled', 'unavailable') GROUP BY month ORDER BY month"
+  }
+]
